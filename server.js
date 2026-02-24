@@ -10,6 +10,7 @@ const app = express();
 
 app.use(express.json());
 app.use(cors());
+app.use(express.static("public"));
 
 // 🔹 MongoDB Connection
 mongoose.connect(
@@ -20,7 +21,7 @@ mongoose.connect(
 
 // 🔹 Home Route
 app.get("/", (req, res) => {
-  res.send("URL Shortener API Running 🚀");
+  res.sendFile(__dirname + "/public/index.html");
 });
 
 // 🔹 Shorten URL
