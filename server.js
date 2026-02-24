@@ -1,0 +1,89 @@
+const express = require("express");
+const mongoose = require("mongoose");
+const shortid = require("shortid");
+const cors = require("cors");
+const validUrl = require("valid-url");
+
+const Url = require("./models/Url");
+
+const app = express();
+
+app.use(express.json());
+app.use(cors());
+
+// 🔹 MongoDB Connection
+mongoose.connect(
+  "mongodb+srv://abhaykumarsaxena19_db_user:Abhay199@cluster0.eimjgjs.mongodb.net/urlshortener?retryWrites=true&w=majority"
+)
+  .then(() => console.log("MongoDB Connected"))
+  .catch(err => console.log(err));
+
+// 🔹 Home Route
+app.get("/", (req, res) => {
+  res.send("URL Shortener API Running 🚀");
+});
+
+// 🔹 Shorten URL
+app.post("/shorten", async (req, res) => {
+  try {
+    const { originalUrl } = req.body;
+
+    if (!originalUrl) {
+      return res.status(400).json({ message: "URL is required" });
+    }
+
+    // Validate URL
+    if (!validUrl.isUri(originalUrl)) {
+      return res.status(400).json({ message: "Invalid URL" });
+    }
+
+    // Check for duplicate
+    const existingUrl = await Url.findOne({ originalUrl });
+    if (existingUrl) {
+      return res.json({
+        shortUrl: `http://localhost:5000/${existingUrl.shortCode}`
+      });
+    }
+
+    const shortCode = shortid.generate();
+
+    const newUrl = new Url({
+      shortCode,
+      originalUrl
+    });
+
+    await newUrl.save();
+
+    res.json({
+      shortUrl: `http://localhost:5000/${shortCode}`
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error });
+  }
+});
+
+// 🔹 Redirect Route
+app.get("/:code", async (req, res) => {
+  try {
+    const { code } = req.params;
+
+    const url = await Url.findOne({ shortCode: code });
+
+    if (url) {
+      url.clicks++;
+      await url.save();
+      return res.redirect(url.originalUrl);
+    } else {
+      return res.status(404).json({ message: "URL not found" });
+    }
+
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error });
+  }
+});
+
+// 🔹 Start Server
+app.listen(5000, () => {
+  console.log("Server running on port 5000");
+});
