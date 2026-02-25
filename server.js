@@ -56,8 +56,8 @@ app.post("/shorten", async (req, res) => {
     await newUrl.save();
 
     res.json({
-      shortUrl: `http://localhost:5000/${shortCode}`
-    });
+  shortUrl: `${req.protocol}://${req.get("host")}/${shortCode}`
+});
 
   } catch (error) {
     res.status(500).json({ message: "Server Error", error });
