@@ -42,7 +42,7 @@ app.post("/shorten", async (req, res) => {
     const existingUrl = await Url.findOne({ originalUrl });
     if (existingUrl) {
       return res.json({
-        shortUrl: `http://localhost:5000/${existingUrl.shortCode}`
+        shortUrl: `${req.protocol}://${req.get("host")}/${shortCode}`
       });
     }
 
